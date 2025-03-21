@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Cemetery Search</title>
+</head>
+<body>
+    <h1>Cemetery Plot Search</h1>
+    <p>Enter as many values as are known and leave unknown fields blank. All search fields are optional. Leave all fields blank for a list of all available records.</p>
+    <p>Fields are not case-sensitive and partial matches are accepted. For example, entering "mill" in the Last Name field could return records with the last name of "Miller", "Hamill", and "Mill".</p>
+
+    <!-- id for label and name for server -->
+    <form action="/search" method="get" id="search-form">
+        <div>
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" name="lastName">
+        </div>
+        <div>
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" name="firstName">
+        </div>
+        <div>
+            <label for="birthYear">Birth Year:</label>
+            <input type="number" id="birthYear" name="birthYear" min="1700" max="2050">
+        </div>
+        <div>
+            <label for="deathYear">Death Year:</label>
+            <input type="number" id="deathYear" name="deathYear" min="1700" max="2050">
+        </div>
+        <button type="submit">Search</button>
+    </form>
+    <h1>Search Results</h1>
+    <% if (records.length) { %>
+        <table>
+            <tr>
+                <th>Last Name </th>
+                <th>Maiden Name </th>
+                <th>First Name </th>
+                <th>Middle Name </th>
+                <th>Title </th>
+                <th>Birth Date </th>
+                <th>Death Date </th>
+                <th>Age </th>
+                <th>Is Veteran </th>
+                <th>Section </th>
+                <th>Lot </th>
+                <th>Moved From </th>
+                <th>Moved to </th>
+                <th>Notes </th>
+            </tr>
+            <!-- Order of table headers and table data is set and preserved by the SQL query -->
+            <% records.forEach((record) => { %>  
+                <tr>
+                    <% for (let field in record) { %>
+                        <td><%= record[field] %></td>
+                    <% } %>
+                </tr>
+            <% }) %>
+        </table>
+    <%} else { %>
+        <p>"No records found."</p> 
+    <% } %>
+</body>
+</html>
