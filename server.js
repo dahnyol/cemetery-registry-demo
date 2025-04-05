@@ -81,6 +81,62 @@ app.get('/logout', (req, res) => {
     }))
 })
 
+// Search for specific data
+// GET to fetch DB data - main page
+app.get('/search', async (req, res) => {
+    // Grab data from form and store to appropriate var
+    const { lastName, firstName, birthYear, deathYear } = req.query;
+    
+    // Define/Create SQL prompt to search supabase DB
+    // select * from cemetery_records where name_last like ('%lastName%') order by name_last asc;
+    let query = supabase
+        .from('cemetery_records')
+        .select(`SURNAME,
+            MAIDEN,
+            FIRSTNAME,
+            MIDDLE,
+            TITLE,
+            BIRTH_DATE,
+            DEATH_DATE,
+            AGE,
+            IS_VET,
+            SECTION,
+            LOT,
+            MOVED_FROM,
+            MOVED_TO,
+            NOTES`)
+        .order('SURNAME', {ascending: true});
+
+    // Partial match will return 
+    if (lastName) {
+        query = query.ilike('SURNAME', `%${lastName}%`);
+    }
+    if (firstName) {
+        query = query.ilike('FIRSTNAME', `%${firstName}%`);
+    }
+
+    // Exact match will return
+    if (birthYear) {
+        query = query.eq('BIRTH_YEAR', birthYear);
+    }
+    if (deathYear) {
+        query = query.eq('DEATH_YEAR', deathYear);
+    }
+    
+    // GET request with defined SQL prompt/query to supabase DB
+    try {
+        let { data, error } = await query;
+        if (error) {
+            throw error;
+        }
+        console.log(data)
+        res.render('index', {records: data});
+    } catch (error) {
+        console.error('Error:', error.message);
+        res.status(500).send('Internal Server Error');        
+    }
+})
+
 // Show existing DB date for record to update
 app.get('/getUpdateRecord', async (req, res) => {
     const memorialID = req.query.memorialID;
@@ -88,22 +144,22 @@ app.get('/getUpdateRecord', async (req, res) => {
     let query = supabase
         .from('cemetery_records')
         .select(`
-            memorial_ID,
-            last_name,
-            maiden_name,
-            first_name,
-            middle_name,
-            title,
-            birth_date,
-            death_date,
-            age,
-            is_veteran,
-            section,
-            lot,
-            moved_from,
-            moved_to,
-            notes`)
-        .eq('memorial_ID', memorialID)
+            MEMORIAL_ID,
+            SURNAME,
+            MAIDEN,
+            FIRSTNAME,
+            MIDDLE,
+            TITLE,
+            BIRTH_DATE,
+            DEATH_DATE,
+            AGE,
+            IS_VET,
+            SECTION,
+            LOT,
+            MOVED_FROM,
+            MOVED_TO,
+            NOTES`)
+        .eq('MEMORIAL_ID', memorialID)
     
     try {
         let { data, error } = await query;
@@ -139,13 +195,13 @@ app.post('/updateRecord', async (req, res) => {
 
 async function updateRecordInSupabase(formData) {
     try {
-        const recordId = formData.memorial_ID;
+        const recordId = formData.MEMORIAL_ID;
         // Before Updating all fields in record object, delete the memorial_ID from object to preserve the ID
-        delete formData.memorial_ID;
+        delete formData.MEMORIAL_ID;
         const { data, error } = await supabase
             .from('cemetery_records')
             .update(formData)
-            .eq('memoral_ID', recordId)
+            .eq('MEMORIAL_ID', recordId)
 
         if (error) throw error;
     } catch (error) {
@@ -153,62 +209,6 @@ async function updateRecordInSupabase(formData) {
         throw error; // re-throw the error to tbe handled by the calling function
     }
 }
-
-// Search for specific data
-// GET to fetch DB data - main page
-app.get('/search', async (req, res) => {
-    // Grab data from form and store to appropriate var
-    const { lastName, firstName, birthYear, deathYear } = req.query;
-    
-    // Define/Create SQL prompt to search supabase DB
-    // select * from cemetery_records where name_last like ('%lastName%') order by name_last asc;
-    let query = supabase
-        .from('cemetery_records')
-        .select(`last_name,
-            maiden_name,
-            first_name,
-            middle_name,
-            title,
-            birth_date,
-            death_date,
-            age,
-            is_veteran,
-            section,
-            lot,
-            moved_from,
-            moved_to,
-            notes`)
-        .order('last_name', {ascending: true});
-
-    // Partial match will return 
-    if (lastName) {
-        query = query.ilike('last_name', `%${lastName}%`);
-    }
-    if (firstName) {
-        query = query.ilike('first_name', `%${firstName}%`);
-    }
-
-    // Exact match will return
-    if (birthYear) {
-        query = query.eq('birth_year', birthYear);
-    }
-    if (deathYear) {
-        query = query.eq('death_year', deathYear);
-    }
-    
-    // GET request with defined SQL prompt/query to supabase DB
-    try {
-        console.log(query);
-        let { data, error } = await query
-        if (error) {
-            throw error;
-        }
-        res.render('index', {records: data});
-    } catch (error) {
-        console.error('Error:', error.message);
-        res.status(500).send('Internal Server Error');        
-    }
-})
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is running ${process.env.PORT}`);

@@ -31,7 +31,7 @@
             <% for (let field in record) { %>
                 <label for="<%= field %>"><%= field %></label>
                 <input type="text" value="<%= record[field] %>" id="<%= field %>" name="<%= field %>" 
-                <%= field === 'memorial_ID' ? 'readonly="readonly"': '' %>>
+                <%= field === 'MEMORIAL_ID' ? 'readonly="readonly"' : '' %>>
             <% } %>
             <button type="submit">Update Record</button>
             </form>
