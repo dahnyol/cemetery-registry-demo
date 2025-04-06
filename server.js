@@ -43,7 +43,7 @@ app.get('/loginPage', (req, res) => {
 // GET to render update page
 app.get('/updatePage', (req, res) => {
     if (req.session.authenticated) {
-        res.render('update', {records: null, message: null});
+        res.render('update', {record: null, message: null});
     } else {
         res.render('login');
     }
@@ -91,20 +91,23 @@ app.get('/search', async (req, res) => {
     // select * from cemetery_records where name_last like ('%lastName%') order by name_last asc;
     let query = supabase
         .from('cemetery_records')
-        .select(`SURNAME,
-            MAIDEN,
-            FIRSTNAME,
-            MIDDLE,
+        .select(`
+            MEMORIAL_ID,
             TITLE,
+            SURNAME,
+            FIRSTNAME,
+            MAIDEN,
+            MIDDLE,
             BIRTH_DATE,
             DEATH_DATE,
             AGE,
-            IS_VET,
             SECTION,
             LOT,
+            IS_VET,
+            NOTES,
             MOVED_FROM,
-            MOVED_TO,
-            NOTES`)
+            MOVED_TO
+            `)
         .order('SURNAME', {ascending: true});
 
     // Partial match will return 
@@ -145,20 +148,21 @@ app.get('/getUpdateRecord', async (req, res) => {
         .from('cemetery_records')
         .select(`
             MEMORIAL_ID,
-            SURNAME,
-            MAIDEN,
-            FIRSTNAME,
-            MIDDLE,
             TITLE,
+            SURNAME,
+            FIRSTNAME,
+            MAIDEN,
+            MIDDLE,
             BIRTH_DATE,
             DEATH_DATE,
             AGE,
-            IS_VET,
             SECTION,
             LOT,
+            IS_VET,
+            NOTES,
             MOVED_FROM,
-            MOVED_TO,
-            NOTES`)
+            MOVED_TO
+            `)
         .eq('MEMORIAL_ID', memorialID)
     
     try {
@@ -171,7 +175,7 @@ app.get('/getUpdateRecord', async (req, res) => {
         if (dataObject) {
             res.render('update', {record: dataObject});
         } else {
-            res.render('update', {record: null, message: "No record found, please try again."});
+            res.render('update', {record: null, message: 'No record found, please try again.'});
         }
     } catch (error) {
         console.error('Error:', error.message);
@@ -183,10 +187,10 @@ app.post('/updateRecord', async (req, res) => {
     if (req.session.authenticated) {
         try {
             const updatedData = await updateRecordInSupabase(req.body);
-            res.render('update', {record: null, message: "Record update successful"});
+            res.render('update', {record: null, message: 'Record update successful'});
         } catch (error) {
             console.error('Error updating record:', error);
-            res.render('update', {message: "Error updating record. Update not successful"});
+            res.render('update', {record: null, message: 'Error updating record. Update not successful'});
         }
     } else {
         res.render('login');
@@ -195,14 +199,15 @@ app.post('/updateRecord', async (req, res) => {
 
 async function updateRecordInSupabase(formData) {
     try {
-        const recordId = formData.MEMORIAL_ID;
-        // Before Updating all fields in record object, delete the memorial_ID from object to preserve the ID
+        console.log(formData);
+        const recordId = formData.MEMORIAL_ID
+        console.log(recordId, typeof recordId);
+        // delete the memorial_ID from object to preserve the ID
         delete formData.MEMORIAL_ID;
         const { data, error } = await supabase
             .from('cemetery_records')
             .update(formData)
-            .eq('MEMORIAL_ID', recordId)
-
+            .eq('MEMORIAL_ID', recordId);
         if (error) throw error;
     } catch (error) {
         console.error('Error updating record in Supabase:', error);
