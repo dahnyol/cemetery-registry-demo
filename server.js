@@ -4,6 +4,8 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 const session = require('express-session');
 
+const PORT = process.env.PORT || 3000;
+
 // Connect to supabase DB
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
@@ -75,7 +77,7 @@ app.get('/logout', (req, res) => {
     req.session.destroy((error => {
         if (error) {
             console.error('Session not destroyed', error.message);
-            return res.status(500).send('Could not log out, please try again');
+            return res.status(500).send('Could not log out, please try again.');
         }
         res.redirect('/'); // Redirect to home page or login page after logging out
     }))
@@ -92,7 +94,7 @@ app.get('/search', async (req, res) => {
     let query = supabase
         .from('cemetery_records')
         .select(`
-            MEMORIAL_ID,
+            ID,
             TITLE,
             SURNAME,
             FIRSTNAME,
@@ -136,18 +138,18 @@ app.get('/search', async (req, res) => {
         res.render('index', {records: data});
     } catch (error) {
         console.error('Error:', error.message);
-        res.status(500).send('Internal Server Error');        
+        res.status(500).send('Internal Server Error.');        
     }
 })
 
 // Show existing DB date for record to update
 app.get('/getUpdateRecord', async (req, res) => {
     const memorialID = req.query.memorialID;
-    // Select field_names from cemetery_records where memorial_id eq memorialID var value
+
     let query = supabase
         .from('cemetery_records')
         .select(`
-            MEMORIAL_ID,
+            ID,
             TITLE,
             SURNAME,
             FIRSTNAME,
@@ -163,7 +165,7 @@ app.get('/getUpdateRecord', async (req, res) => {
             MOVED_FROM,
             MOVED_TO
             `)
-        .eq('MEMORIAL_ID', memorialID)
+        .eq('ID', memorialID)
     
     try {
         let { data, error } = await query;
@@ -175,7 +177,7 @@ app.get('/getUpdateRecord', async (req, res) => {
         if (dataObject) {
             res.render('update', {record: dataObject});
         } else {
-            res.render('update', {record: null, message: 'No record found, please try again.'});
+            res.render('update', {record: null, message: 'No record found.'});
         }
     } catch (error) {
         console.error('Error:', error.message);
@@ -187,10 +189,10 @@ app.post('/updateRecord', async (req, res) => {
     if (req.session.authenticated) {
         try {
             const updatedData = await updateRecordInSupabase(req.body);
-            res.render('update', {record: null, message: 'Record update successful'});
+            res.render('update', {record: null, message: 'Record update successful.'});
         } catch (error) {
             console.error('Error updating record:', error);
-            res.render('update', {record: null, message: 'Error updating record. Update not successful'});
+            res.render('update', {record: null, message: 'Error updating record. Update not successful.'});
         }
     } else {
         res.render('login');
@@ -200,14 +202,13 @@ app.post('/updateRecord', async (req, res) => {
 async function updateRecordInSupabase(formData) {
     try {
         console.log(formData);
-        const recordId = formData.MEMORIAL_ID
-        console.log(recordId, typeof recordId);
+        const recordId = formData.ID
         // delete the memorial_ID from object to preserve the ID
-        delete formData.MEMORIAL_ID;
+        delete formData.ID;
         const { data, error } = await supabase
             .from('cemetery_records')
             .update(formData)
-            .eq('MEMORIAL_ID', recordId);
+            .eq('ID', recordId);
         if (error) throw error;
     } catch (error) {
         console.error('Error updating record in Supabase:', error);
@@ -215,6 +216,6 @@ async function updateRecordInSupabase(formData) {
     }
 }
 
-app.listen(process.env.PORT, () => {
-    console.log(`Server is running ${process.env.PORT}`);
+app.listen(PORT, () => {
+    console.log(`Server is running ${PORT}`);
 })

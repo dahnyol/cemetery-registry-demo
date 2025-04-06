@@ -17,15 +17,12 @@
         <form action="/login" method="POST" id="login-form">
             <div class="login-form-Username">
                 <label for="username">Username:</label>
-                <input type="text" id="username" name="username"></input>
+                <!-- Optimized for one user -->
+                <input type="text" id="username" name="username" value="admin@cemeteryregistry.com" readonly="readonly">
             </div> 
-            <!-- <div class="login-form-email">
-                <label for="email">Email:</label>
-                <input type="text" id="email" name="email"></input>
-            </div> -->
             <div class="login-form-password">
                 <label for="password">Password:</label>
-                <input type="password" id="password" name="password"></input>
+                <input type="password" id="password" name="password">
             </div>
             <button type="submit">Login</button>
         </form>
